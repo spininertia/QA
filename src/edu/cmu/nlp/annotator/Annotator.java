@@ -24,6 +24,11 @@ import edu.stanford.nlp.util.CoreMap;
 
 import edu.cmu.nlp.util.Pair;
 
+/**
+ *  Annotator - This class extracts NLP units from each sentences in a document 
+ *  using StanfordNLP Tools and WordNet
+ *
+ */
 public class Annotator {
 
 	private static StanfordCoreNLP stanfordnlp = null;
