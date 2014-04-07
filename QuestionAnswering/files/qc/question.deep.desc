@@ -1,0 +1,56 @@
+ABBR
+  abb	abbreviation
+  exp	expression abbreviated
+ENTY
+  animal	animals
+  body	organs body
+  color	colors
+  cremat	inventions books creative pieces
+  currency	currency names
+  dismed	diseases medicine
+  event	events
+  food	food
+  instrument	musical instrument
+  lang	languages
+  letter	letters
+  other	other entities
+  plant	plants
+  product	products
+  religion	religions
+  sport	sports
+  substance	elements substances
+  symbol	symbols signs
+  techmeth	techniques methods
+  termeq	equivalent terms
+  veh	vehicles
+  word	words special property
+DESC
+  def	definition
+  desc	description
+  manner	manner action
+  reason	reasons
+HUM
+  gr	group organization persons
+  ind	individual
+  title	title person
+  desc	description person
+LOC
+  city	cities
+  country	countries
+  mount	mountains
+  other	other locations
+  state	states
+NUM
+  code	postcodes codes
+  count	number
+  date	dates
+  dist	linear measures
+  money	prices
+  ord	ranks
+  other	other numbers
+  period	lasting time
+  perc	fractions
+  speed	speed
+  temp	temperature
+  size	size area volume
+  weight	weight
