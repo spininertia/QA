@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.cmu.nlp.qc.QuestionType;
 import edu.cmu.nlp.util.Chunk;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.trees.Tree;
@@ -19,7 +20,8 @@ public class Question {
 	private Tree parsingTree;
 	private SemanticGraph dependency;
 	private String type;
-
+	private QuestionType questionType;
+	
 	public Question() {
 	}
 
@@ -118,6 +120,14 @@ public class Question {
 		this.type = type;
 	}
 
+	public QuestionType getQuestionType() {
+		return questionType;
+	}
+	
+	public void setQuestionType(QuestionType questionType) {
+		this.questionType = questionType;
+	}
+	
 	public boolean containsNegation() {
 		boolean negation = false;
 		Iterator<TypedDependency> iter = dependency.typedDependencies().iterator();
@@ -131,4 +141,5 @@ public class Question {
 		
 		return negation;
 	}
+
 }
