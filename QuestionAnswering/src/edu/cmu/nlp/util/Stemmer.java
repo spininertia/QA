@@ -34,7 +34,6 @@ package edu.cmu.nlp.util;
 
  */
 
-import java.io.*;
 
 /**
  * Stemmer, implementing the Porter Stemming Algorithm
@@ -44,7 +43,7 @@ import java.io.*;
  * the various stem(something) methods.
  */
 
-class Stemmer {
+public class Stemmer {
 	private char[] b;
 	private int i, /* offset into b */
 	i_end, /* offset to end of stemmed word */
@@ -551,7 +550,7 @@ class Stemmer {
 	 * the input. You can retrieve the result with
 	 * getResultLength()/getResultBuffer() or toString().
 	 */
-	public void stem() {
+	public String stem() {
 		k = i - 1;
 		if (k > 1) {
 			step1();
@@ -563,6 +562,7 @@ class Stemmer {
 		}
 		i_end = k + 1;
 		i = 0;
+		return this.toString();
 	}
 
 	/**
@@ -573,9 +573,8 @@ class Stemmer {
 	 * file-name ...
 	 */
 	public static void main(String[] args) {
-		String word = "dreamer";
+		String word = "John";
 		Stemmer stemmer = new Stemmer(word);
-		stemmer.stem();
-		System.out.println(stemmer.toString());
+		System.out.println(stemmer.stem());
 	}
 }

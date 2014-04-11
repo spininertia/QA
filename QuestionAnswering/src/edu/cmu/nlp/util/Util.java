@@ -54,4 +54,20 @@ public class Util {
 		}
 		return result;
 	}
+	
+	public static List<String> stemSent(List<Chunk> sent) {
+		List<String> stemmed = new ArrayList<String>();
+		
+		for (Chunk token: sent) {
+			Stemmer stemmer = new Stemmer(token.getWord());
+			stemmed.add(stemmer.stem());
+		}
+		
+		return stemmed;
+	}
+	
+	public static String stemWord(String word) {
+		Stemmer stemmer = new Stemmer(word);
+		return stemmer.stem();
+	}
 }
