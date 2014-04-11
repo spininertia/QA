@@ -126,4 +126,36 @@ public class Sentence {
 
 		return negation;
 	}
+	
+	public boolean containsNE(String ne) {
+		for (Chunk token : getTokens()) {
+			if (token.getNe().equals(ne)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean containsPrep() {
+		Iterator<TypedDependency> iter = getDependency().typedDependencies().iterator();
+		
+		while(iter.hasNext()) {
+			TypedDependency td = iter.next();
+			if (td.reln().getShortName().startsWith("prep")) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public boolean containsWord(String word) {
+		for (Chunk token : getTokens()) {
+			if (token.getWord().equalsIgnoreCase(word)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 }
