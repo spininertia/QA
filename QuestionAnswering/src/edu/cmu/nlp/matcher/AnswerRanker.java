@@ -12,10 +12,11 @@ import edu.cmu.nlp.annotator.Question;
 import edu.cmu.nlp.annotator.Sentence;
 import edu.cmu.nlp.filter.AbstractFilter;
 import edu.cmu.nlp.filter.QuestionTypeFilter;
+import edu.cmu.nlp.qc.SimpleQuestionClassifier;
 import edu.cmu.nlp.util.Util;
 import edu.stanford.nlp.trees.TypedDependency;
 
-public class AnswerScorer {
+public class AnswerRanker {
 	
 	public void scoreBagOfWords(Question question, Sentence candidate) {
 		List<String> qWords = Util.stemSent(question.getTokens());
@@ -24,13 +25,13 @@ public class AnswerScorer {
 		HashSet<String> matched = new HashSet<String>();
 
 		for (String qWord : qWords) {
-			for (String sWord : qWords) {
+			for (String sWord : sWords) {
 				if (!matched.contains(qWord) && qWord.equals(sWord)) {
 					matched.add(qWord);
 				}
 			}
 		}
-		candidate.setBowMatchScore(1.0f * matched.size() / sWords.size());
+		candidate.setBowMatchScore(1.0f * matched.size() / qWords.size());
 	}
 
 	public void scoreDependency(Question question, Sentence candidate) {
@@ -83,7 +84,7 @@ public class AnswerScorer {
 	
 	public static void main(String[] args) {
 		String rawQ = "Who loves Mary?";
-		String doc = "Mary is Loved by John. Mary loves flappy bird.";
+		String doc = "Mary is Loved by John. Mary loves flappy bird. The man who killed John loves Mary's bird. ";
 		
 		HashMap<Integer, Sentence> sents = Annotator.annotateDoc(doc);
 		List<Sentence> candidates = new ArrayList<Sentence>();
@@ -91,13 +92,18 @@ public class AnswerScorer {
 			candidates.add(sents.get(key));
 		}
 		
-		AbstractFilter filter = new QuestionTypeFilter();
-		
 		Question question = Annotator.annotateQuestion(rawQ);
-		AnswerScorer scorer = new AnswerScorer();
+
+		SimpleQuestionClassifier clf = new SimpleQuestionClassifier();
+		question.setQuestionType(clf.classifyQuestion(question));
+		AbstractFilter filter = new QuestionTypeFilter();
+		candidates = filter.filter(candidates, question);
+		
+		AnswerRanker scorer = new AnswerRanker();
 		scorer.rankSentences(question, candidates);
 		System.out.println(question.getDependency());
 		for (Sentence candidate : candidates) {
+			System.out.println(candidate.getSynonyms());
 			System.out.println(candidate.getDependency());
 			System.out.printf("%s\t%f %f\n", candidate.getSentence(), candidate.getBowMatchScore(), candidate.getDependencyMatchScore());
 		}

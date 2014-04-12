@@ -5,6 +5,8 @@ import java.util.List;
 
 import edu.cmu.nlp.annotator.Question;
 import edu.cmu.nlp.annotator.Sentence;
+import edu.cmu.nlp.util.Util;
+import edu.stanford.nlp.trees.TypedDependency;
 
 public class QuestionTypeFilter extends AbstractFilter {
 
@@ -63,7 +65,22 @@ public class QuestionTypeFilter extends AbstractFilter {
 				}
 				
 				break;
-				
+			case WHAT:
+				for (TypedDependency dep : question.getDependency().typedDependencies()) {
+					if (dep.reln().getShortName().equals("nsubj") && dep.gov().value().equalsIgnoreCase("what")) {
+						List<String> tokens = Util.stemSent(candidate.getTokens());
+						filter = true;
+						
+						for (String token : tokens) {
+							if (token.equals(Util.stemWord(dep.dep().value()))) {
+								filter = false;
+								break;
+							}
+						}
+						break;
+					}
+				}
+				break;
 			default :
 				filter = false;
 
