@@ -19,14 +19,19 @@ import edu.cmu.nlp.Indexer.Searcher;
 import edu.cmu.nlp.annotator.Annotator;
 import edu.cmu.nlp.annotator.Question;
 import edu.cmu.nlp.annotator.Sentence;
-import edu.cmu.nlp.qc.QC;
-import edu.cmu.nlp.qc.QuestionTaxonomy;
-import edu.cmu.nlp.util.Util;
+import edu.cmu.nlp.filter.AbstractFilter;
+import edu.cmu.nlp.filter.QuestionTypeFilter;
+import edu.cmu.nlp.matcher.AnswerRanker;
+import edu.cmu.nlp.qc.QuestionType;
+import edu.cmu.nlp.qc.SimpleQuestionClassifier;
 
 public class Runner {
 
 	private String rawArticle;
 	private List<String> rawQuestions;
+	private SimpleQuestionClassifier classifier = new SimpleQuestionClassifier();
+	private AbstractFilter filter = new QuestionTypeFilter();
+	private AnswerRanker ranker = new AnswerRanker();
 
 	private Map<Integer, Sentence> sentences;
 
@@ -49,7 +54,7 @@ public class Runner {
 		fis.read(data);
 		fis.close();
 
-		return new String(data, "UTF-8");
+		return new String(data, "UTF-8").replaceAll("\n+", ". ");
 	}
 
 	public static List<String> loadQustions(String questionFile) throws FileNotFoundException {
@@ -63,10 +68,11 @@ public class Runner {
 
 		return list;
 	}
-	
+
 	public static boolean sameNESet(List<String> qNEs, List<String> cNEs) {
-		for (String ne : cNEs) {
-			if (!qNEs.contains(ne)) {
+		for (String ne : qNEs) {
+			if (!ne.equals("O") && !cNEs.contains(ne)) {
+				System.out.println(ne);
 				return false;
 			}
 		}
@@ -91,7 +97,7 @@ public class Runner {
 	}
 
 	public void classifyQuestion(Question question) {
-		question.setType(QC.classifyQuestion(question));
+		question.setQuestionType(classifier.classifyQuestion(question));
 	}
 
 	public List<Sentence> searchCandidateSentences(Question question) {
@@ -111,24 +117,23 @@ public class Runner {
 	public String answerQuestion(Question question, List<Sentence> candidates) {
 		String answer = "";
 
-		if (question.getType().equals(QuestionTaxonomy.YES_OR_NO)) {
+		if (question.getQuestionType() == QuestionType.YESNO) {
 			if (candidates.size() == 0) {
-				answer = "No";
+				answer = "No.";
 			} else {
-				List<String> questionNes = Util.extractNEs(question.getTokens());
 				Sentence candidate = candidates.get(0);
 
-				List<String> candidateNes = Util.extractNEs(candidate.getTokens());
-
-				if (!sameNESet(questionNes, candidateNes)) {
+				// BOW and dependency threshold
+				if (candidate.getBowMatchScore() < 0.4 && candidate.getDependencyMatchScore() < 0.33) {
 					answer = "No";
 				} else {
 					if (question.containsNegation() == candidate.containsNegation()) {
-						answer = "Yes";
+						answer = "Yes.";
 					} else {
-						answer = "No";
+						answer = "No.";
 					}
 				}
+				// }
 			}
 		} else {
 			Sentence candidate = candidates.get(0);
@@ -142,30 +147,42 @@ public class Runner {
 		System.out.println(answer);
 	}
 
+	public static void printCandidateInfo(List<Sentence> candidates) {
+		for (Sentence candidate : candidates) {
+			System.out.printf("%s %.2f %.2f\n", candidate.getSentence(), candidate.getBowMatchScore(),
+					candidate.getDependencyMatchScore());
+		}
+	}
+
 	public void run() {
 		annotateDoc();
 		indexSentences();
 
 		for (String rawQuestion : this.rawQuestions) {
+//			System.out.printf("Q:%s\n", rawQuestion);
 			Question question = annotateQuestion(rawQuestion);
-			List<Sentence> candidates = searchCandidateSentences(question);
 			classifyQuestion(question);
+
+			List<Sentence> candidates = searchCandidateSentences(question);
+			candidates = filter.filter(candidates, question);
+			ranker.rankSentences(question, candidates);
+
+//			printCandidateInfo(candidates);
+
 			String answer = answerQuestion(question, candidates);
 			presentResult(answer);
 		}
 	}
-
-	
 
 	public static void main(String[] args) {
 		if (args.length != 2) {
 			System.err.println("Usage: Java -jar Answer.jar <ArticleFile> <QuestionFile>");
 			System.exit(-1);
 		}
-		
+
 		String articleFile = args[0];
 		String questionFile = args[1];
-		
+
 		Runner runner = new Runner(articleFile, questionFile);
 		runner.run();
 	}

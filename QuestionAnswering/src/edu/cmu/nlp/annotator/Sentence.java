@@ -8,7 +8,10 @@ import edu.cmu.nlp.util.*;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.trees.TypedDependency;
 
-public class Sentence {
+public class Sentence implements Comparable<Sentence> {
+
+	public static final float bowWeight = 0.3f;
+	public static final float depWeight = 0.7f;
 
 	private int id;
 	private String sentence = "";
@@ -19,7 +22,10 @@ public class Sentence {
 	private List<String> synonyms = new ArrayList<String>();
 	private SemanticGraph dependency;
 
-	public String toString(){
+	private float bowMatchScore = 0f;
+	private float dependencyMatchScore = 0f;
+
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("SENTENCE{\n");
 		sb.append("\tid:\t" + this.getId() + "\n");
@@ -31,12 +37,11 @@ public class Sentence {
 		sb.append("}\n");
 		return sb.toString();
 	}
-	
+
 	public Sentence() {
 	}
-	
-	public Sentence(int id, String sentence, List<Chunk> tokens,
-			List<String> nounPhrases, List<String> verbPhrases,
+
+	public Sentence(int id, String sentence, List<Chunk> tokens, List<String> nounPhrases, List<String> verbPhrases,
 			List<Pair> coref, List<String> synonyms, SemanticGraph edpendency) {
 		this.setId(id);
 		this.setSentence(sentence);
@@ -103,7 +108,6 @@ public class Sentence {
 	public void setId(int id) {
 		this.id = id;
 	}
-	
 
 	public SemanticGraph getDependency() {
 		return dependency;
@@ -113,10 +117,26 @@ public class Sentence {
 		this.dependency = dependency;
 	}
 
+	public float getBowMatchScore() {
+		return bowMatchScore;
+	}
+
+	public void setBowMatchScore(float bowMatchScore) {
+		this.bowMatchScore = bowMatchScore;
+	}
+
+	public float getDependencyMatchScore() {
+		return dependencyMatchScore;
+	}
+
+	public void setDependencyMatchScore(float dependencyMatchScore) {
+		this.dependencyMatchScore = dependencyMatchScore;
+	}
+
 	public boolean containsNegation() {
 		boolean negation = false;
 		Iterator<TypedDependency> iter = getDependency().typedDependencies().iterator();
-		
+
 		while (iter.hasNext()) {
 			TypedDependency td = iter.next();
 			if (td.reln().getShortName().equals("neg")) {
@@ -126,4 +146,54 @@ public class Sentence {
 
 		return negation;
 	}
+
+	public boolean containsNE(String ne) {
+		for (Chunk token : getTokens()) {
+			if (token.getNe().equals(ne)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean containsPrep() {
+		Iterator<TypedDependency> iter = getDependency().typedDependencies().iterator();
+
+		while (iter.hasNext()) {
+			TypedDependency td = iter.next();
+			if (td.reln().getShortName().startsWith("prep")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public boolean containsWord(String word) {
+		for (Chunk token : getTokens()) {
+			if (token.getWord().equalsIgnoreCase(word)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public float getMatchingScore() {
+		return getBowMatchScore() * bowWeight + getDependencyMatchScore() * depWeight;
+	}
+
+	@Override
+	public int compareTo(Sentence another) {
+		float diff = getMatchingScore() - another.getMatchingScore();
+
+		if (diff > 0) {
+			return -1;
+		} else if (diff < 0) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+
 }

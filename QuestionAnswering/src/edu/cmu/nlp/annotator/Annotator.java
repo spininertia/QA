@@ -1,19 +1,27 @@
 package edu.cmu.nlp.annotator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
 
 import edu.cmu.nlp.tools.WordNet;
 import edu.cmu.nlp.util.Chunk;
+import edu.cmu.nlp.util.Pair;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -21,17 +29,22 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcess
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.util.CoreMap;
-import edu.cmu.nlp.util.Pair;
 
 public class Annotator {
 
 	private static StanfordCoreNLP stanfordnlp = null;
+	public static Set<String> subRefs;
+	public final static String[] pronouns = {"they", "he", "she", "it", "them", "him", "her"};
 
 	static {
 		Properties props = new Properties();
-		props.put("annotators",
-				"tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+		props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
 		stanfordnlp = new StanfordCoreNLP(props);
+		subRefs = new HashSet<String>();
+		for (String pronoun : pronouns) {
+			subRefs.add(pronoun);
+
+		}
 	}
 
 	public static Annotation AnnotateDoc(String doc) {
@@ -40,10 +53,10 @@ public class Annotator {
 		return document;
 	}
 
-	public static List<CoreMap> getSentences(Annotation document){
+	public static List<CoreMap> getSentences(Annotation document) {
 		return document.get(SentencesAnnotation.class);
 	}
-	
+
 	public static List<Chunk> annotatePOSandNE(CoreMap sentence) {
 		List<Chunk> wordAnnotation = new ArrayList<Chunk>();
 		for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
@@ -67,9 +80,8 @@ public class Annotator {
 	public static Map<Integer, CorefChain> decoref(Annotation document) {
 		return document.get(CorefChainAnnotation.class);
 	}
-	
-	public static HashMap<Integer, ArrayList<Pair>> translateCoref(
-			Map<Integer, CorefChain> graph) {
+
+	public static HashMap<Integer, ArrayList<Pair>> translateCoref(Map<Integer, CorefChain> graph) {
 		HashMap<Integer, ArrayList<Pair>> result = new HashMap<Integer, ArrayList<Pair>>();
 		Iterator<Entry<Integer, CorefChain>> iter = graph.entrySet().iterator();
 		while (iter.hasNext()) {
@@ -91,32 +103,32 @@ public class Annotator {
 		return result;
 	}
 
-	public static List<String> annotateSynonyms(CoreMap sentence){
+	public static List<String> annotateSynonyms(CoreMap sentence) {
 		List<String> synonyms = new ArrayList<String>();
-		for(CoreLabel token : sentence.get(TokensAnnotation.class)){
+		for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
 			String word = token.get(TextAnnotation.class);
 			String pos = token.get(PartOfSpeechAnnotation.class);
-			if(pos.startsWith("NN")){
+			if (pos.startsWith("NN")) {
 				synonyms.addAll(WordNet.getNounSynonyms(word));
-			}else if(pos.startsWith("VB")){
+			} else if (pos.startsWith("VB")) {
 				synonyms.addAll(WordNet.getVerbSynonyms(word));
-			}else if(pos.startsWith("JJ")){
+			} else if (pos.startsWith("JJ")) {
 				synonyms.addAll(WordNet.getAdjSynonyms(word));
-			}else if(pos.startsWith("RB")){
+			} else if (pos.startsWith("RB")) {
 				synonyms.addAll(WordNet.getAdverbSynonyms(word));
 			}
 		}
 		return synonyms;
 	}
-	
-	public static HashMap<Integer, Sentence> annotateDoc(String str){
+
+	public static HashMap<Integer, Sentence> annotateDoc(String str) {
 		Annotation document = Annotator.AnnotateDoc(str);
 		List<CoreMap> sentences = Annotator.getSentences(document);
 		HashMap<Integer, Sentence> map = new HashMap<Integer, Sentence>();
 		int id = 0;
 		for (CoreMap sentence : sentences) {
-			++ id;
-			List<Chunk> posAndNe =  annotatePOSandNE(sentence);
+			++id;
+			List<Chunk> posAndNe = annotatePOSandNE(sentence);
 			Tree parseTree = parseSentence(sentence);
 			SemanticGraph dependencies = dependencyParsing(sentence);
 			List<String> nounPhrases = AnnotatePhrase.getNounPhrases(parseTree);
@@ -135,19 +147,42 @@ public class Annotator {
 		Map<Integer, CorefChain> coref = decoref(document);
 		HashMap<Integer, ArrayList<Pair>> corefChain = translateCoref(coref);
 		Iterator<Entry<Integer, ArrayList<Pair>>> iter = corefChain.entrySet().iterator();
-		while(iter.hasNext()){
+		while (iter.hasNext()) {
 			Entry<Integer, ArrayList<Pair>> e = iter.next();
 			map.get(e.getKey()).setCoref(e.getValue());
 		}
+
+		// replace ref to its named entity coref
+		for (Entry<Integer, Sentence> entry : map.entrySet()) {
+			Sentence sentence = entry.getValue();
+			String originalSent = sentence.getSentence();
+			for (Pair pair : sentence.getCoref()) {
+				if (originalSent.startsWith(pair.getWord())) {
+					if (subRefs.contains(pair.getWord().toLowerCase())
+							|| pair.getWord().toLowerCase().startsWith("the") && pair.getCoref().size() > 0) {
+						for (String ref : pair.getCoref()) {
+							char firstCh = ref.charAt(0);
+							if (firstCh >= 'A' && firstCh <= 'Z') {
+								System.out.printf("[Replace] %s with %s\n", pair.getWord(), ref);
+								originalSent = originalSent.replace(pair.getWord(), ref);
+								break;
+							}
+						}
+					}
+				}
+			}
+			sentence.setSentence(originalSent);
+		}
+
 		return map;
 	}
-	
-	public static Question annotateQuestion(String str){
+
+	public static Question annotateQuestion(String str) {
 		Annotation document = Annotator.AnnotateDoc(str);
 		List<CoreMap> sentences = Annotator.getSentences(document);
 		Question question = new Question();
 		for (CoreMap sentence : sentences) {
-			List<Chunk> posAndNe =  annotatePOSandNE(sentence);
+			List<Chunk> posAndNe = annotatePOSandNE(sentence);
 			Tree parseTree = parseSentence(sentence);
 			SemanticGraph dependencies = dependencyParsing(sentence);
 			List<String> nounPhrases = AnnotatePhrase.getNounPhrases(parseTree);
@@ -159,10 +194,10 @@ public class Annotator {
 			question.setParsingTree(parseTree);
 			question.setDependency(dependencies);
 		}
-		return question;		
+		return question;
 	}
-	
-	public static void main(String[] args){
+
+	public static void main(String[] args) {
 		String str = "Kosgi Santosh sent an email to Stanford University. He didn't get a reply. Lucy Cohen is a really nice and beautiful girl. Her dog is called Lily.";
 		HashMap<Integer, Sentence> map = Annotator.annotateDoc(str);
 		System.out.println(map);

@@ -31,29 +31,29 @@ public class Searcher {
 		int weights[] = { 1, 1, 1, 1, 1, 1};
 
 		solrQuery.append(question.getSentence() + " ");
-		solrQuery.append("text:\"" + question.getSentence() + "\"^" + weights[0] + " ");
-		
-		StringBuilder nes = new StringBuilder();
-		for(Chunk chunk : question.getTokens()){
-			if(!chunk.getNe().equals("0"))
-				nes.append(chunk.getWord() + " ");
-		}
-		solrQuery.append("ne:\"" + nes.toString().trim() + "\"^" + weights[1] + " ");
-		
-		StringBuilder nps = new StringBuilder();
-		for(String np : question.getNounPhrases()){
-			nps.append(np + " ");
-		}
-		solrQuery.append("np:\"" + nps.toString().trim() + "\"^" + weights[2] + " ");
-		
-		StringBuilder vps = new StringBuilder();
-		for(String vp : question.getVerbPhrases()){
-			nps.append(vp + " ");
-		}
-		solrQuery.append("vp:\"" + vps.toString().trim() + "\"^" + weights[3] + " ");
-	
-		solrQuery.append("coref:\"" + question.getSentence() + "\"^" + weights[4] + " ");
-		solrQuery.append("synonym:\"" + question.getSentence() + "\"^" + weights[5] + " ");		
+//		solrQuery.append("text:\"" + question.getSentence() + "\"^" + weights[0] + " ");
+//		
+//		StringBuilder nes = new StringBuilder();
+//		for(Chunk chunk : question.getTokens()){
+//			if(!chunk.getNe().equals("0"))
+//				nes.append(chunk.getWord() + " ");
+//		}
+//		solrQuery.append("ne:\"" + nes.toString().trim() + "\"^" + weights[1] + " ");
+//		
+//		StringBuilder nps = new StringBuilder();
+//		for(String np : question.getNounPhrases()){
+//			nps.append(np + " ");
+//		}
+//		solrQuery.append("np:\"" + nps.toString().trim() + "\"^" + weights[2] + " ");
+//		
+//		StringBuilder vps = new StringBuilder();
+//		for(String vp : question.getVerbPhrases()){
+//			nps.append(vp + " ");
+//		}
+//		solrQuery.append("vp:\"" + vps.toString().trim() + "\"^" + weights[3] + " ");
+//	
+//		solrQuery.append("coref:\"" + question.getSentence() + "\"^" + weights[4] + " ");
+//		solrQuery.append("synonym:\"" + question.getSentence() + "\"^" + weights[5] + " ");		
 
 		return solrQuery.toString().trim();
 	}
