@@ -123,16 +123,15 @@ public class Runner {
 			} else {
 				Sentence candidate = candidates.get(0);
 
-//				List<String> questionNes = Util.extractNEs(question.getTokens());
-//				List<String> candidateNes = Util.extractNEs(candidate.getTokens());
-
-				// if (!sameNESet(questionNes, candidateNes)) {
-				// answer = "No.";
-				// } else {
-				if (question.containsNegation() == candidate.containsNegation()) {
-					answer = "Yes.";
+				// BOW and dependency threshold
+				if (candidate.getBowMatchScore() < 0.4 && candidate.getDependencyMatchScore() < 0.33) {
+					answer = "No";
 				} else {
-					answer = "No.";
+					if (question.containsNegation() == candidate.containsNegation()) {
+						answer = "Yes.";
+					} else {
+						answer = "No.";
+					}
 				}
 				// }
 			}
@@ -147,7 +146,7 @@ public class Runner {
 	public void presentResult(String answer) {
 		System.out.println(answer);
 	}
-	
+
 	public static void printCandidateInfo(List<Sentence> candidates) {
 		for (Sentence candidate : candidates) {
 			System.out.printf("%s %.2f %.2f\n", candidate.getSentence(), candidate.getBowMatchScore(),
@@ -163,13 +162,13 @@ public class Runner {
 //			System.out.printf("Q:%s\n", rawQuestion);
 			Question question = annotateQuestion(rawQuestion);
 			classifyQuestion(question);
-			
+
 			List<Sentence> candidates = searchCandidateSentences(question);
 			candidates = filter.filter(candidates, question);
 			ranker.rankSentences(question, candidates);
-			
+
 //			printCandidateInfo(candidates);
-			
+
 			String answer = answerQuestion(question, candidates);
 			presentResult(answer);
 		}
