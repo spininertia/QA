@@ -1,5 +1,7 @@
 package edu.cmu.nlp.tools;
 
+import java.io.PrintStream;
+
 import net.didion.jwnl.JWNLException;
 import edu.cmu.nlp.util.Configuration;
 import edu.illinois.cs.cogcomp.wnsim.WNSim;
@@ -9,8 +11,11 @@ public class WordNetSim {
 	private static WNSim wnsim;
 	static {
 		try {
+			PrintStream out = System.out;
+			System.setOut(System.err);
 			wnsim = WNSim.getInstance(Configuration.getWordnetPathForSim(),
 					"wordnet.xml");
+			System.setOut(out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
