@@ -22,14 +22,14 @@ public class SimpleQuestionClassifier {
 	
 	private static final String whPattern 			= "SBARQ";
 	
-	private static final String whoPattern 			= "^who\\b.*";
-	private static final String wherePattern		= "^where\\b.*";
-	private static final String whenPattern 		= "^when\\b.*";
+	private static final String whoPattern 			= "^who('s)?\\b.*";
+	private static final String wherePattern		= "^where('s)?\\b.*";
+	private static final String whenPattern 		= "^when('s)?\\b.*";
 	private static final String whichPattern 		= "^which\\b.*";
 	private static final String whyPattern	 		= "^why\\b.*";
 	private static final String whosePattern 		= "^whose\\b.*";
 	
-	private static final String whatPattern 		= "^what\\b.*";
+	private static final String whatPattern 		= "^what('s)?\\b.*";
 	private static final String whathappendPattern 	= "^what happen.*";
 	
 	private static final String howoffenPattern 	= "^how often.*";
@@ -46,7 +46,9 @@ public class SimpleQuestionClassifier {
 		// should be bracketed as SBAR, not SBARQ.
 
 		String sent = question.getSentence().toLowerCase();
-		if(sent.matches(whoPattern)) {
+		if (question.getParsingTree().firstChild().value().equals(yesnoPattern)) {
+			return QuestionType.YESNO;
+		} else if(sent.matches(whoPattern)) {
 			return QuestionType.WHO;
 		}else if (sent.matches(wherePattern)) {
 			return QuestionType.WHERE;
@@ -70,8 +72,6 @@ public class SimpleQuestionClassifier {
 			return QuestionType.HOW_MUCH;
 		}else if(sent.matches(howfarPattern)) {
 			return QuestionType.HOW_FAR;
-		}else if (question.getParsingTree().firstChild().value().equals(yesnoPattern)) {
-			return QuestionType.YESNO;
 		}
 		return QuestionType.UNKNOWN;
 	}

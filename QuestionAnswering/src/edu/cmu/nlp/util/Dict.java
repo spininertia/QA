@@ -9,8 +9,13 @@ public class Dict {
 	private static HashMap<String, Integer> dict = new HashMap<String, Integer>();
 	private static int size = 0;
 	private static HashSet<String> pronounDict = new HashSet<String>();
+	private static String[] negateWords = {"except"};
+	public static HashSet<String> negations = new HashSet<String>();
 
 	static {
+		for (String word : negateWords) {
+			negations.add(word);
+		}
 		try {
 			Scanner sc = new Scanner(new FileInputStream(Configuration.getWordListPath()));
 			int id = 0;
@@ -25,9 +30,7 @@ public class Dict {
 			}
 
 			Scanner sc1 = new Scanner(new File(Configuration.getQuestionTrainPath()));
-			int counter = 0;
 			while (sc1.hasNextLine()) {
-				counter++;
 				String buffer = sc1.nextLine();
 				String[] strs = buffer.split("\\s+");
 				int iter = 0;
@@ -37,7 +40,6 @@ public class Dict {
 					}
 				}
 			}
-			System.out.println(counter);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

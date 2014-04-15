@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 
@@ -107,7 +108,9 @@ public class Runner {
 
 		if (results != null) {
 			for (SolrDocument doc : results) {
-				candidates.add(sentences.get(Integer.valueOf(doc.get("id").toString())));
+				if (doc != null) {
+					candidates.add(sentences.get(Integer.valueOf(doc.get("id").toString())));
+				}
 			}
 		}
 
@@ -154,7 +157,7 @@ public class Runner {
 		}
 	}
 
-	public void run() {
+	public void run() throws SolrServerException, IOException {
 		annotateDoc();
 		indexSentences();
 
@@ -167,14 +170,16 @@ public class Runner {
 			candidates = filter.filter(candidates, question);
 			ranker.rankSentences(question, candidates);
 
-//			printCandidateInfo(candidates);
+			// printCandidateInfo(candidates);
 
 			String answer = answerQuestion(question, candidates);
 			presentResult(answer);
 		}
+		//clear index
+		Searcher.clearIndex();
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SolrServerException, IOException {
 		if (args.length != 2) {
 			System.err.println("Usage: Java -jar Answer.jar <ArticleFile> <QuestionFile>");
 			System.exit(-1);

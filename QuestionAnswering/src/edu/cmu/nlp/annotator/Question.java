@@ -6,6 +6,7 @@ import java.util.List;
 
 import edu.cmu.nlp.qc.QuestionType;
 import edu.cmu.nlp.util.Chunk;
+import edu.cmu.nlp.util.Dict;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
@@ -135,6 +136,12 @@ public class Question {
 		while (iter.hasNext()) {
 			TypedDependency td = iter.next();
 			if (td.reln().getShortName().equals("neg")) {
+				negation = !negation;
+			}
+		}
+		
+		for (Chunk chunk : getTokens()) {
+			if (Dict.negations.contains(chunk.getWord().toLowerCase())) {
 				negation = !negation;
 			}
 		}

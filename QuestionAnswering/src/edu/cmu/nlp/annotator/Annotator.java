@@ -12,6 +12,7 @@ import java.util.Set;
 
 import edu.cmu.nlp.tools.WordNet;
 import edu.cmu.nlp.util.Chunk;
+import edu.cmu.nlp.util.Dict;
 import edu.cmu.nlp.util.Pair;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
@@ -158,12 +159,12 @@ public class Annotator {
 			String originalSent = sentence.getSentence();
 			for (Pair pair : sentence.getCoref()) {
 				if (originalSent.startsWith(pair.getWord())) {
-					if (subRefs.contains(pair.getWord().toLowerCase())
+					if (Dict.isPronoun(pair.getWord().toLowerCase())
 							|| pair.getWord().toLowerCase().startsWith("the") && pair.getCoref().size() > 0) {
 						for (String ref : pair.getCoref()) {
 							char firstCh = ref.charAt(0);
 							if (firstCh >= 'A' && firstCh <= 'Z') {
-								System.out.printf("[Replace] %s with %s\n", pair.getWord(), ref);
+//								System.out.printf("[Replace] %s with %s\n", pair.getWord(), ref);
 								originalSent = originalSent.replace(pair.getWord(), ref);
 								break;
 							}

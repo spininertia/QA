@@ -143,6 +143,12 @@ public class Sentence implements Comparable<Sentence> {
 				negation = !negation;
 			}
 		}
+		
+		for (Chunk chunk : getTokens()) {
+			if (Dict.negations.contains(chunk.getWord().toLowerCase())) {
+				negation = !negation;
+			}
+		}
 
 		return negation;
 	}

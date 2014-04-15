@@ -67,7 +67,7 @@ public class QuestionTypeFilter extends AbstractFilter {
 				break;
 			case WHAT:
 				for (TypedDependency dep : question.getDependency().typedDependencies()) {
-					if (dep.reln().getShortName().equals("nsubj") && dep.gov().value().equalsIgnoreCase("what")) {
+					if (dep.reln().getShortName().equals("nsubj") || dep.reln().getShortName().equals("nsubjpass")) {
 						List<String> tokens = Util.stemSent(candidate.getTokens());
 						filter = true;
 						
