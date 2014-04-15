@@ -1,14 +1,16 @@
 package edu.cmu.nlp.Indexer;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 
 import edu.cmu.lti.oaqa.core.provider.solr.SolrWrapper;
 import edu.cmu.nlp.annotator.Question;
-import edu.cmu.nlp.util.Chunk;
 import edu.cmu.nlp.util.Configuration;
 
 public class Searcher {
@@ -56,6 +58,11 @@ public class Searcher {
 //		solrQuery.append("synonym:\"" + question.getSentence() + "\"^" + weights[5] + " ");		
 
 		return solrQuery.toString().trim();
+	}
+	
+	public static void clearIndex() throws SolrServerException, IOException {
+		SolrServer solrServer = new HttpSolrServer(Configuration.getSolrServerUrl() + Configuration.getSolrCoreName());
+		solrServer.deleteByQuery("*:*");
 	}
 
 	public static SolrDocumentList search(String query){
